@@ -60,6 +60,16 @@ class TrieNode {
   // Note: if you want to convert `unique_ptr` into `shared_ptr`, you can use `std::shared_ptr<T>(std::move(ptr))`.
   virtual auto Clone() const -> std::unique_ptr<TrieNode> { return std::make_unique<TrieNode>(children_); }
 
+  virtual auto GetChild(char c) const -> std::unique_ptr<TrieNode> {
+    auto it = children_.find(c);
+    if (it == children_.end()) {
+      return nullptr;
+    }
+    return it->second->Clone();
+  }
+
+  virtual void PutChild(char c, std::unique_ptr<TrieNode> node) { children_[c] = std::move(node); }
+
   // A map of children, where the key is the next character in the key, and the value is the next TrieNode.
   // You MUST store the children information in this structure. You are NOT allowed to remove the `const` from
   // the structure.
@@ -91,6 +101,10 @@ class TrieNodeWithValue : public TrieNode {
   auto Clone() const -> std::unique_ptr<TrieNode> override {
     return std::make_unique<TrieNodeWithValue<T>>(children_, value_);
   }
+
+  auto GetChild(char c) const -> std::unique_ptr<TrieNode> override { return TrieNode::GetChild(c); }
+
+  void PutChild(char c, std::unique_ptr<TrieNode> node) override { TrieNode::PutChild(c, std::move(node)); }
 
   // The value associated with this trie node.
   std::shared_ptr<T> value_;
